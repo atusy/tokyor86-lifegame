@@ -1,0 +1,243 @@
+---
+title: |
+  「え!? ifもforも使わずにライフゲームの実装を!?」\
+  「できらR!!」
+subtitle: "Tokyo.R 86"
+date: 2020-5-23
+author: Atusy
+output:
+  revealjs::revealjs_presentation:
+    keep_md: true
+    self_contained: false
+    center: true
+    css: revealjs.css
+    mathjax: null
+    pandoc_args:
+      - "--lua-filter"
+      - "filters.lua"
+    reveal_options:
+      slideNumber: true
+---
+
+```{r setup, include=FALSE}
+library(rmarkdown)
+library(lifegamer)
+`%>%` <- magrittr::`%>%`
+```
+
+
+```{r knitr, include=FALSE}
+library(knitr)
+opts_chunk$set(
+  collapse = TRUE, comment = "#>"
+)
+```
+# {#self-intro}
+
+
+::: {.col style='width:300px'}
+
+### ***Atusy***
+
+![](https://github.com/atusy/presentation/blob/master/headphone.jpg?raw=true){width=300px}
+
+:::
+
+::: {.col style='width:600px'}
+
+* R Markdown関係のコミッタ
+* felp、ftExtra、minidownなどパッケージを作ってはTokyoRで紹介している
+* Pythonでデータ分析してる
+* ![](https://icongr.am/feather/home.svg)
+  [blog.atusy.net](https://blog.atusy.net)
+* ![](https://icongr.am/feather/twitter.svg)
+  [\@Atsushi776](https://twitter.com/Atsushi776)
+
+:::
+
+# 今日の話 {#sionn}
+
+sionnさんのPythonによる
+
+[「え!? ifもforも使わずにライフゲームの実装を!? 」「できらぁ!!」](https://qiita.com/sionn/items/2863214b34ac946ec12f)
+
+のR版です。
+
+
+# lifegameとは？ {#lifegame-is}
+
+生命の誕生、進化、淘汰などをモデル化したシミュレーションゲーム (Conway, 1970)
+
+```{r, echo=FALSE, fig.width = 8, fig.height=4}
+knitr::knit_print(animate(lifegame(frog, 2)))
+```
+
+## ルール
+
+誕生
+
+: 死亡セルに隣接する生存セルが3つなら次世代が誕生。
+
+生存
+
+: 生存セルに隣接する生存セルが2つか3つならば、次世代も生存。
+
+過疎・過密
+
+: 誕生も生存もしないセルは過疎・過密として死滅。
+
+<small>参考: <https://ja.wikipedia.org/wiki/ライフゲーム></small>
+
+## `if`と`for`を多用しそう？？ {#needs-if-and-for}
+
+# 色んなループで階乗
+
+お約束
+
+* `prod(seq(n))`
+* `factorial(n)`
+* `gamma(n + 1L)`
+
+とかで解けるとか言わない
+
+
+## for
+
+フツー
+
+```{r}
+factorial_for <- function(n) {
+  result <- 1L
+  for (i in seq(n)) {
+    result <- i * result
+  }
+  result
+}
+factorial_for(10L)
+```
+
+## lappy
+
+前回値の利用は面倒
+
+```{r}
+factorial_lapply <- function(n) {
+  result <- 1L
+  lapply(seq(n), function(i) {
+    result <<- i * result
+  })
+  result
+}
+factorial_lapply(10L)
+```
+
+## 再帰
+
+普通は`if`を使わないと終了できない
+
+```{r}
+factorial_recall <- function(n) {
+  if (n <= 0L) return(1L)
+  Recall(n - 1L) * n
+}
+factorial_recall(10L)
+```
+
+## S3再帰 {#s3-recall}
+
+`if`不要
+
+```{r}
+factorial_s3 <- 
+  function(n, ...) UseMethod("factorial_s3")
+factorial_s3.default <- function(n, ...) {
+  n * factorial_s3(structure(
+    n - 1L, class = as.character(n - 1L)))[[1L]]
+}
+factorial_s3.0 <- function(n) 1L
+factorial_s3(10L)
+```
+
+# S3再帰は劇的に遅い {#s3-recall-is-slow}
+
+```{r bench, eval=FALSE}
+bench_mark <- bench::mark(
+  factorial_for(10L),
+  factorial_lapply(10L),
+  factorial_recall(10L),
+  factorial_s3(10L)
+)
+ggplot2::autoplot(bench_mark)
+```
+
+## ベンチマーク可視化
+
+```{r, ref.label='bench', cache=TRUE, fig.height=4, echo=FALSE, message=FALSE}
+```
+
+
+Tip: [Rのforは遅いと誰が言った？ ](https://qiita.com/Atsushi776/items/c31f2345b9c698354c81)
+
+# S3再帰の使い道 {#s3-recall-in-real-life}
+
+遅いのにあるの？
+
+
+## `dplyr::mutate` ≦ 0.8.5
+
+1. 入力が`data.frame`なら`tibble`に変換
+2. **再帰的**に`mutate`
+3. 出力を`data.frame`に戻す
+
+```{r, eval=FALSE}
+mutate.data.frame <- function(.data, ...) {
+  as.data.frame(mutate(tbl_df(.data), ...))
+}
+```
+
+# `if`を使わない工夫 {#techniques-to-omit-if}
+
+## 名前付きベクトル
+
+```{r}
+x = c(A = 1, B = 2, C = 3)
+x[c("C", "A", "B", "B")]
+```
+
+## トリッキーなif else {#tricky-if-else}
+
+nが1以下なら`"end"`、違えば`"continue"`を返す
+
+```{r}
+n <- 2L
+c("end", "continue")[c(n <= 1L, TRUE)][1L]
+```
+
+# lifegame {#time-to-lifegame}
+
+* Rレベルでのif文、for文、apply族禁止
+* 可視化を除いてbaseに限定
+* パッケージ化
+
+https://github.com/atusy/lifegamer
+
+## Diehard実行例 {#running-diehard}
+
+```{r, eval=FALSE}
+library(lifegamer)
+diehard_result <- lifegame(diehard, 131)
+animate(diehard_result, ncol = 19)
+```
+
+注: 時間の都合でアニメーションGIF化できませんでした。
+
+## Diehard実行結果 {#visualizing-diehard}
+
+```{r, echo=FALSE, fig.height=3.5 * 4 / 3, fig.width=8}
+library(lifegamer)
+diehard_result <- lifegame(diehard, 131)
+animate(diehard_result, ncol = 19)
+```
+
+
+# Enjoy
