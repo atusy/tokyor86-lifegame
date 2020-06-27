@@ -88,7 +88,34 @@ knitr::knit_print(animate(lifegame(frog, 2)))
 
 <small>参考: <https://ja.wikipedia.org/wiki/ライフゲーム></small>
 
-## `if`と`for`を多用しそう？？ {#needs-if-and-for}
+## 追加ルール
+
+* 可視化を除いてRレベルでのif文、for文、apply族禁止
+* 可視化を除いてbaseに限定
+* パッケージ化
+
+https://github.com/atusy/lifegamer
+
+# lifegame {#time-to-lifegame}
+
+## Diehard実行例 {#running-diehard}
+
+```{r, eval=FALSE}
+library(lifegamer)
+diehard_result <- lifegame(diehard, 131)
+animate(diehard_result, ncol = 19)
+```
+
+注: 時間の都合でアニメーションGIF化できませんでした。
+
+## Diehard実行結果 {#visualizing-diehard}
+
+```{r, echo=FALSE, fig.height=3.5 * 4 / 3, fig.width=8}
+library(lifegamer)
+diehard_result <- lifegame(diehard, 131)
+animate(diehard_result, ncol = 19)
+```
+
 
 # 色んなループで階乗
 
@@ -211,32 +238,6 @@ nが1以下なら`"end"`、違えば`"continue"`を返す
 ```{r}
 n <- 2L
 c("end", "continue")[c(n <= 1L, TRUE)][1L]
-```
-
-# lifegame {#time-to-lifegame}
-
-* Rレベルでのif文、for文、apply族禁止
-* 可視化を除いてbaseに限定
-* パッケージ化
-
-https://github.com/atusy/lifegamer
-
-## Diehard実行例 {#running-diehard}
-
-```{r, eval=FALSE}
-library(lifegamer)
-diehard_result <- lifegame(diehard, 131)
-animate(diehard_result, ncol = 19)
-```
-
-注: 時間の都合でアニメーションGIF化できませんでした。
-
-## Diehard実行結果 {#visualizing-diehard}
-
-```{r, echo=FALSE, fig.height=3.5 * 4 / 3, fig.width=8}
-library(lifegamer)
-diehard_result <- lifegame(diehard, 131)
-animate(diehard_result, ncol = 19)
 ```
 
 
