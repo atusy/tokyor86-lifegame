@@ -3,7 +3,7 @@ title: |
   「え!? ifもforも使わずにライフゲームの実装を!?」\
   「できらR!!」
 subtitle: "Tokyo.R 86"
-date: 2020-5-23
+date: 2020-6-27
 author: Atusy
 output:
   revealjs::revealjs_presentation:
