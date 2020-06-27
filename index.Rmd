@@ -110,7 +110,7 @@ animate(diehard_result, ncol = 19)
 
 ## Diehard実行結果 {#visualizing-diehard}
 
-```{r, echo=FALSE, fig.height=3.5 * 4 / 3, fig.width=8}
+```{r, echo=FALSE, fig.height=3.5 * 4 / 3, fig.width=8, out.extra='style="width:100%"'}
 library(lifegamer)
 diehard_result <- lifegame(diehard, 131)
 animate(diehard_result, ncol = 19)
@@ -224,13 +224,6 @@ mutate.data.frame <- function(.data, ...) {
 
 # `if`を使わない工夫 {#techniques-to-omit-if}
 
-## 名前付きベクトル
-
-```{r}
-x = c(A = 1, B = 2, C = 3)
-x[c("C", "A", "B", "B")]
-```
-
 ## トリッキーなif else {#tricky-if-else}
 
 nが1以下なら`"end"`、違えば`"continue"`を返す
@@ -240,5 +233,11 @@ n <- 2L
 c("end", "continue")[c(n <= 1L, TRUE)][1L]
 ```
 
+## 名前付きベクトル
+
+```{r}
+x = c(A = 1, B = 2, C = 3)
+x[c("C", "A", "B", "B")]
+```
 
 # Enjoy
